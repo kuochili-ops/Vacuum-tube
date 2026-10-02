@@ -200,7 +200,7 @@
         <button class="collapse-btn" onclick="toggleCollapse()" id="collapseBtn">收合</button>
       </div>
       <div class="panel-body">
-        <p>6管序列漸變傳遞。支援自動錄影與設定複製。</p>
+        <p>6管序列漸變傳遞。自動錄影會從頭開始同步錄製。</p>
         <div class="controls">
           <div class="input-group">
             <input type="text" id="textInput" value="系統自動優化完成" maxlength="20">
@@ -210,7 +210,7 @@
             <button onclick="startAutoRecord()" id="recordBtn">🎬 自動錄影</button>
             <button onclick="copyShareData()">📋 複製設定與連結</button>
           </div>
-          <div id="recordingBadge" class="recording-badge">🔴 正在自動錄影中...</div>
+          <div id="recordingBadge" class="recording-badge">🔴 正在自動錄影中 (從頭開始)...</div>
         </div>
       </div>
     </div>
@@ -229,7 +229,6 @@
     let tubeStates = []; 
     let isCollapsed = false;
 
-    // 錄影相關變數
     let mediaRecorder;
     let recordedChunks = [];
     let isRecording = false;
@@ -287,7 +286,6 @@
       }
     }
 
-    // 產生細體金屬線條紋理
     function createNixieCharTextures(char, isLit = true) {
       const colorCanvas = document.createElement('canvas');
       colorCanvas.width = 512;
@@ -347,7 +345,6 @@
       return { colorTex, dispTex };
     }
 
-    // 蜂巢金屬陽極網格貼圖
     function createHoneycombTexture() {
       const canvas = document.createElement('canvas');
       canvas.width = 128;
@@ -379,7 +376,6 @@
       return texture;
     }
 
-    // 創建單個輝光管
     function createSingleIN18Tube(char, tubeIndex) {
       const tubeGroup = new THREE.Group();
 
@@ -576,9 +572,14 @@
       startSequentialScrolling();
     }
 
-    // 自動錄影功能：錄製一輪循環後，最後一個字出現後 3 秒自動停止並存檔
+    // 自動錄影功能：強制重置回開頭（從頭開始），錄製一輪後過 3 秒自動停止並存檔
     function startAutoRecord() {
       if (isRecording) return;
+
+      // 點擊自動錄影時強制重置回第一句開頭
+      baseOffsetIndex = 0;
+      initRack(currentMessage);
+      startSequentialScrolling();
 
       const stream = renderer.domElement.captureStream(30);
       recordedChunks = [];
@@ -614,7 +615,7 @@
       document.getElementById('recordingBadge').style.display = 'block';
       document.getElementById('recordBtn').disabled = true;
 
-      // 計算一輪播放所需時間：若字數 > 6，則完整跑完一輪需要 (字數 * 3秒)，再加上最後出現後 3 秒
+      // 計算一輪播放所需時間：若字數 > 6，完整跑完一輪需要 (字數 * 3秒)，再加上最後出現後 3 秒
       const loops = Math.max(currentMessage.length, 6);
       const totalRecordTimeMs = (loops * 3000) + 3000;
 
@@ -625,7 +626,6 @@
       }, totalRecordTimeMs);
     }
 
-    // 複製 App URL、訊息與設定
     function copyShareData() {
       const msg = document.getElementById('textInput').value;
       const shareText = `【𓃥 白六真空管訊息傳遞】\n網址: ${window.location.href}\n目前訊息設定: ${msg}`;
